@@ -1,6 +1,5 @@
 pragma solidity ^0.6.0;
 
-
 abstract contract Context {
     function _msgSender() internal view virtual returns (address payable) {
         return msg.sender;
@@ -714,14 +713,11 @@ contract Vulkania is Context, IBEP20, Ownable {
     }
 
     function _setTaxFee(uint256 taxFee) external onlyOwner() {
-    
         require(taxFee >= 50 && taxFee <= 1000, 'taxFee should be in 1 - 10');
         _TAX_FEE = taxFee;
     }
 
     function _setBurnFee(uint256 burnFee) external onlyOwner() {
-        
-        
         require(burnFee >= 50 && burnFee <= 1000, 'burnFee should be in 1 - 10');
         _BURN_FEE = burnFee;
     }

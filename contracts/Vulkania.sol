@@ -598,13 +598,13 @@ contract Vulkania is Context, IBEP20, Ownable {
     }
 
     function _transfer(address sender, address recipient, uint256 amount) private {
+        require( recipient != address(this) );
         require(sender != address(0), "BEP20: transfer from the zero address");
         require(recipient != address(0), "BEP20: transfer to the zero address");
-        require(amount > 0, "Transfer amount must be greater than zero");
-       
+
         if(sender != owner() && recipient != owner())
             require(amount <= _MAX_TX_SIZE, "Transfer amount exceeds the maxTxAmount.");
-       
+
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
@@ -623,7 +623,7 @@ contract Vulkania is Context, IBEP20, Ownable {
         (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tBurn) = _getValues(tAmount);
         uint256 rBurn =  tBurn.mul(currentRate);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);      
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _reflectFee(rFee, rBurn, tFee, tBurn);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -634,7 +634,7 @@ contract Vulkania is Context, IBEP20, Ownable {
         uint256 rBurn =  tBurn.mul(currentRate);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);          
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _reflectFee(rFee, rBurn, tFee, tBurn);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -645,7 +645,7 @@ contract Vulkania is Context, IBEP20, Ownable {
         uint256 rBurn =  tBurn.mul(currentRate);
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);  
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _reflectFee(rFee, rBurn, tFee, tBurn);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -657,7 +657,7 @@ contract Vulkania is Context, IBEP20, Ownable {
         _tOwned[sender] = _tOwned[sender].sub(tAmount);
         _rOwned[sender] = _rOwned[sender].sub(rAmount);
         _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);        
+        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
         _reflectFee(rFee, rBurn, tFee, tBurn);
         emit Transfer(sender, recipient, tTransferAmount);
     }
@@ -697,8 +697,9 @@ contract Vulkania is Context, IBEP20, Ownable {
     }
 
     function _getCurrentSupply() private view returns(uint256, uint256) {
+        require(_excluded.length < 50, "Excluded list too long");
         uint256 rSupply = _rTotal;
-        uint256 tSupply = _tTotal;      
+        uint256 tSupply = _tTotal;
         for (uint256 i = 0; i < _excluded.length; i++) {
             if (_rOwned[_excluded[i]] > rSupply || _tOwned[_excluded[i]] > tSupply) return (_rTotal, _tTotal);
             rSupply = rSupply.sub(_rOwned[_excluded[i]]);
@@ -707,23 +708,22 @@ contract Vulkania is Context, IBEP20, Ownable {
         if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
         return (rSupply, tSupply);
     }
-   
+
     function _getTaxFee() private view returns(uint256) {
         return _TAX_FEE;
     }
 
     function _setTaxFee(uint256 taxFee) external onlyOwner() {
-        require(taxFee >= 50 && taxFee <= 1000, 'taxFee should be in 1 - 10');
+        require(taxFee >= 100 && taxFee <= 1000, 'taxFee should be in 1 - 10');
         _TAX_FEE = taxFee;
     }
 
     function _setBurnFee(uint256 burnFee) external onlyOwner() {
-        require(burnFee >= 50 && burnFee <= 1000, 'burnFee should be in 1 - 10');
+        require(burnFee >= 100 && burnFee <= 1000, 'burnFee should be in 1 - 10');
         _BURN_FEE = burnFee;
     }
 
     function _getMaxTxAmount() private view returns(uint256) {
         return _MAX_TX_SIZE;
     }
-   
 }
